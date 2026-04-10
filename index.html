@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>البركة – منصة الجمعيات الخيرية</title>
+<meta name="theme-color" content="#c9a84c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--gold:#c9a84c;--gold-l:#e8c878;--gold-d:#8b6914;--gold-bg:rgba(201,168,76,.1);--bg:#0a0a0a;--card:#141414;--card2:#1c1c1c;--border:#252525;--text:#e8e0cc;--muted:#777;--green:#27ae60;--red:#e74c3c;--blue:#3498db;--shadow:rgba(0,0,0,.5);--r:14px}
+[data-theme="light"]{--bg:#f5f0e8;--card:#ffffff;--card2:#f0ead8;--border:#ddd5bb;--text:#1a1509;--muted:#6b5f4a;--shadow:rgba(0,0,0,.15);--gold-bg:rgba(184,134,11,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);direction:rtl;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
+a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:'Tajawal',sans-serif}
+#auth-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;overflow-y:auto}
+#auth-screen.hide{display:none}.auth-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.12),transparent 60%),radial-gradient(ellipse at 100% 100%,rgba(201,168,76,.06),transparent 50%);pointer-events:none}
+.auth-card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:36px;width:100%;max-width:420px;box-shadow:0 24px 80px var(--shadow)}
+.auth-logo{text-align:center;margin-bottom:28px}.auth-logo-ic{font-size:44px;display:block;margin-bottom:8px}.auth-logo-tx{font-size:22px;font-weight:900;color:var(--gold)}.auth-logo-sb{font-size:13px;color:var(--muted);margin-top:3px}
+.auth-tabs{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px}
+.auth-tab{flex:1;padding:9px;border-radius:8px;border:none;background:transparent;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}.auth-tab.on{background:var(--gold);color:#000}
+.auth-step{display:none}.auth-step.on{display:block}
+.auth-field{margin-bottom:14px}.auth-field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:none}
+.auth-inp{width:100%;background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-size:14px;outline:none;transition:border .2s}.auth-inp:focus{border-color:var(--gold)}.auth-inp::placeholder{color:var(--muted)}
+.auth-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;margin-top:4px}
+.auth-btn.primary{background:var(--gold);color:#000}.auth-btn.primary:hover{background:var(--gold-l)}
+.auth-btn.secondary{background:var(--bg);border:1.5px solid var(--border);color:var(--text);margin-top:8px}.auth-btn.secondary:hover{border-color:var(--gold);color:var(--gold)}
+.auth-btn:disabled{opacity:.5;cursor:default}
+.admin-gear{position:absolute;bottom:16px;left:16px;width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
+.admin-gear:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+.theme-toggle-auth{position:absolute;top:16px;left:16px;width:34px;height:34px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s}
+.theme-toggle-auth:hover{border-color:var(--gold);color:var(--gold)}
+.hdr{position:sticky;top:0;z-index:900;height:62px;background:rgba(10,10,10,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:background .3s}
+[data-theme="light"] .hdr{background:rgba(245,240,232,.95)}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0}.logo-ic{font-size:24px}.logo-tx{font-size:17px;font-weight:900;color:var(--gold);line-height:1}.logo-sb{font-size:10px;color:var(--muted)}
+.nav{display:flex;align-items:center;gap:3px}
+.nb{background:none;border:none;color:var(--muted);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;display:flex;align-items:center;gap:4px;transition:all .2s;white-space:nowrap}
+.nb:hover,.nb.on{background:var(--gold-bg);color:var(--gold)}.nb.primary{background:var(--gold);color:#000;font-weight:700}.nb.primary:hover{background:var(--gold-l)}.nb.ghost{border:1px solid var(--border)}.nb.ghost:hover{border-color:var(--gold);color:var(--gold);background:transparent}
+.user-pill{display:flex;align-items:center;gap:7px;background:var(--gold-bg);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--gold)}
+.user-pill .av{width:24px;height:24px;border-radius:6px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:800}
+.theme-btn{width:34px;height:34px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0}
+.theme-btn:hover{border-color:var(--gold);color:var(--gold)}
+.pg{display:none;min-height:calc(100vh - 62px)}.pg.on{display:block}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-gold{background:var(--gold);color:#000}.btn-gold:hover{background:var(--gold-l);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}.btn-danger{background:rgba(231,76,60,.12);color:var(--red);border:1px solid rgba(231,76,60,.25)}.btn-danger:hover{background:var(--red);color:#fff}.btn-success{background:rgba(39,174,96,.12);color:var(--green);border:1px solid rgba(39,174,96,.25)}.btn-success:hover{background:var(--green);color:#fff}.btn-blue{background:rgba(52,152,219,.12);color:var(--blue);border:1px solid rgba(52,152,219,.25)}.btn-blue:hover{background:var(--blue);color:#fff}.btn-purple{background:rgba(155,89,182,.12);color:#9b59b6;border:1px solid rgba(155,89,182,.25)}.btn-purple:hover{background:#9b59b6;color:#fff}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:700}
+.bdg-gold{background:rgba(201,168,76,.15);color:var(--gold)}.bdg-green{background:rgba(39,174,96,.15);color:var(--green)}.bdg-red{background:rgba(231,76,60,.15);color:var(--red)}.bdg-blue{background:rgba(52,152,219,.15);color:var(--blue)}.bdg-orange{background:rgba(230,126,34,.15);color:#e67e22}.bdg-purple{background:rgba(155,89,182,.15);color:#9b59b6}
+.hero{padding:70px 24px 56px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.1),transparent 60%)}.hero h1{font-size:clamp(26px,4.5vw,48px);font-weight:900;line-height:1.3;margin-bottom:16px}.hero h1 span{color:var(--gold)}.hero p{font-size:16px;color:var(--muted);max-width:520px;margin:0 auto 32px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gold-bg);border:1px solid rgba(201,168,76,.25);color:var(--gold);padding:5px 14px;border-radius:100px;font-size:12px;margin-bottom:20px}
+.stats-bar{display:flex;justify-content:center;background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat-itm{flex:1;max-width:200px;text-align:center;padding:24px 14px;border-left:1px solid var(--border)}.stat-itm:last-child{border-left:none}.stat-n{font-size:30px;font-weight:900;color:var(--gold)}.stat-l{font-size:12px;color:var(--muted);margin-top:3px}
+.charts-sec{padding:44px 24px;max-width:1100px;margin:0 auto}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}.chart-card h3{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:14px}.chart-box{position:relative;height:230px;display:flex;align-items:center;justify-content:center}
+.sec{padding:44px 24px;max-width:1200px;margin:0 auto}.sec-h{font-size:22px;font-weight:800;margin-bottom:5px}.sec-s{font-size:13px;color:var(--muted);margin-bottom:24px}
+.cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.cat-c{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 12px;text-align:center;cursor:pointer;transition:all .2s}.cat-c:hover{border-color:var(--gold);background:var(--gold-bg);transform:translateY(-2px)}.cat-ic{font-size:28px;margin-bottom:7px}.cat-nm{font-size:13px;font-weight:700}.cat-ct{font-size:11px;color:var(--muted);margin-top:2px}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.flt-bar{background:var(--card);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;position:sticky;top:62px;z-index:50}
+.s-inp{flex:1;min-width:160px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:9px;font-size:13px;outline:none;transition:border .2s}.s-inp:focus{border-color:var(--gold)}.s-inp::placeholder{color:var(--muted)}
+.f-sel{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:9px;font-size:12px;cursor:pointer;outline:none;appearance:none}.f-sel:focus{border-color:var(--gold)}
+.cards-wrap{padding:18px 20px;max-width:1200px;margin:0 auto}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.ac{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .2s}
+.ac:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 8px 28px rgba(201,168,76,.08)}
+.ac-hd{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.03));padding:16px 18px;display:flex;align-items:center;gap:12px}
+.ac-av{width:48px;height:48px;border-radius:11px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}.ac-nm{font-size:14px;font-weight:700;line-height:1.3}
+.ac-bd{padding:12px 18px 16px}.ac-ds{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.svc-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}.svc-chip{background:var(--bg);border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:5px;font-size:11px}
+.ac-ft{display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.map-wrap{display:flex;height:calc(100vh - 62px)}.map-side{width:300px;flex-shrink:0;background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.map-side-hd{padding:14px;border-bottom:1px solid var(--border);background:var(--card)}.map-side-hd h3{font-size:14px;font-weight:700;margin-bottom:9px}.map-list{overflow-y:auto;flex:1}
+.map-itm{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.map-itm:hover{background:rgba(201,168,76,.05)}.map-itm.sel{background:rgba(201,168,76,.09);border-right:3px solid var(--gold)}
+.map-itm-nm{font-size:12px;font-weight:600;margin-bottom:2px}.map-itm-ad{font-size:10px;color:var(--muted);margin-top:2px}#leaf-map{flex:1}
+.reg-wrap{max-width:660px;margin:0 auto;padding:32px 18px}.reg-hd{text-align:center;margin-bottom:32px}.reg-hd h2{font-size:24px;font-weight:800;margin-bottom:5px}.reg-hd p{color:var(--muted);font-size:13px}
+.steps-row{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px}
+.step-d{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--card);border:2px solid var(--border);color:var(--muted);transition:all .3s;position:relative;z-index:1;flex-shrink:0}
+.step-d.on{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}.step-d.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-ln{flex:1;height:2px;background:var(--border);max-width:60px;transition:background .3s}.step-ln.done{background:var(--green)}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px}
+.fs{display:none}.fs.on{display:block}.fg{margin-bottom:12px}.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.fi,.fta,.fsl{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:9px;font-size:13px;outline:none;transition:border .2s}
+.fi:focus,.fta:focus,.fsl:focus{border-color:var(--gold)}.fi::placeholder,.fta::placeholder{color:var(--muted)}.fta{resize:vertical;min-height:80px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.svc-cbs{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.cb-itm{display:flex;align-items:center;gap:6px;cursor:pointer;padding:7px 9px;border:1px solid var(--border);border-radius:7px;transition:all .15s;font-size:12px}
+.cb-itm:hover{border-color:var(--gold);background:var(--gold-bg)}.cb-itm input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer}
+.form-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+#map-picker{height:200px;border-radius:9px;overflow:hidden;border:1px solid var(--border);margin-top:6px}
+.coord-note{font-size:11px;color:var(--muted);margin-top:4px}
+.prof-wrap{max-width:860px;margin:0 auto;padding:24px 18px}
+.back-b{display:inline-flex;align-items:center;gap:4px;color:var(--muted);cursor:pointer;font-size:12px;margin-bottom:16px;background:none;border:none;transition:color .2s}.back-b:hover{color:var(--gold)}
+.prof-hero{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:18px;display:flex;gap:18px;align-items:flex-start}
+.prof-av{width:66px;height:66px;border-radius:15px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.prof-h1{font-size:20px;font-weight:800;margin-bottom:7px}
+.prof-meta{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px}.meta-i{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.prof-actions{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.p-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.ic{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px;margin-bottom:14px}.ic h3{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.svc-lst{display:flex;flex-direction:column;gap:7px}.svc-it{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--bg);border-radius:7px;font-size:12px}
+.svc-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.cont-lst{display:flex;flex-direction:column;gap:9px}.cont-it{display:flex;align-items:center;gap:9px;font-size:12px}
+.cont-ic{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.prof-map{height:200px;border-radius:9px;overflow:hidden;border:1px solid var(--border)}
+.adm-login{max-width:360px;margin:80px auto;padding:0 18px}
+.adm-wrap{max-width:1300px;margin:0 auto;padding:20px 18px}
+.adm-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}.adm-hdr h2{font-size:20px;font-weight:800}
+.adm-nav{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px}
+.adm-nav-btn{padding:8px 18px;border-radius:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:5px}
+.adm-nav-btn.on{background:var(--gold);color:#000}
+.s-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}.sc-ic{font-size:20px;margin-bottom:6px}.sc-n{font-size:28px;font-weight:900;color:var(--gold)}.sc-l{font-size:11px;color:var(--muted);margin-top:2px}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.tbl-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tbl-toolbar h3{font-size:14px;font-weight:700}.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:9px 14px;text-align:right;color:var(--muted);font-weight:700;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}.tbl tr:hover td{background:rgba(255,255,255,.015)}
+.tbl-actions{display:flex;gap:5px;flex-wrap:wrap}.adm-filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.big-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:3000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.big-modal.open{display:flex}.big-modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;width:100%;max-width:700px;margin:auto}
+.big-modal-box h3{font-size:18px;font-weight:800;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.bm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.bm-full{grid-column:1/-1}
+.bm-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.chat-fab{position:fixed;bottom:22px;left:22px;width:52px;height:52px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;z-index:890;box-shadow:0 4px 18px rgba(201,168,76,.35);transition:all .2s}
+.chat-fab:hover{transform:scale(1.08)}.chat-win{position:fixed;bottom:84px;left:22px;width:340px;height:500px;background:var(--card);border:1px solid var(--border);border-radius:18px;display:none;flex-direction:column;z-index:889;box-shadow:0 18px 56px var(--shadow);overflow:hidden}
+.chat-win.open{display:flex}
+.chat-hd{background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.04));padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.chat-av{width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.chat-ti{font-size:13px;font-weight:700}.chat-st{font-size:10px;color:var(--green)}
+.chat-cl{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:3px;margin-right:0;margin-left:auto}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+.msg{max-width:85%;padding:8px 12px;border-radius:11px;font-size:12px;line-height:1.55;word-break:break-word}
+.msg.bot{background:var(--bg);border:1px solid var(--border);align-self:flex-start;border-radius:3px 11px 11px 11px}.msg.user{background:var(--gold);color:#000;align-self:flex-end;border-radius:11px 3px 11px 11px;font-weight:500}
+.msg.typing{color:var(--muted);font-style:italic}
+.qr-row{display:flex;gap:5px;padding:7px 12px;overflow-x:auto;border-top:1px solid var(--border)}
+.qr{flex-shrink:0;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:100px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s}.qr:hover{border-color:var(--gold);color:var(--gold)}
+.chat-inp-row{padding:9px 12px;border-top:1px solid var(--border);display:flex;gap:6px}
+.chat-inp{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 11px;border-radius:8px;font-size:12px;outline:none;transition:border .2s}.chat-inp:focus{border-color:var(--gold)}.chat-inp::placeholder{color:var(--muted)}
+.chat-snd{width:34px;height:34px;border-radius:8px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .2s}.chat-snd:hover{background:var(--gold-l)}.chat-snd:disabled{opacity:.5;cursor:default}
+.toast-ct{position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 20px;border-radius:9px;font-size:13px;font-weight:700;animation:slideD .3s ease;white-space:nowrap}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}.t-inf{background:var(--gold);color:#000}
+@keyframes slideD{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-ov.open{display:flex}.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;max-width:420px;width:100%}
+.modal h3{font-size:16px;font-weight:800;margin-bottom:7px}.modal p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}.modal-btns{display:flex;gap:9px;justify-content:flex-end}
+.empty-s{text-align:center;padding:60px 20px;color:var(--muted)}.empty-s .ei{font-size:40px;margin-bottom:12px}.empty-s .et{font-size:14px}
+.spin-w{display:flex;justify-content:center;padding:50px}.spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.lf-popup{font-family:'Tajawal',sans-serif;direction:rtl;min-width:160px}.lf-popup h4{font-size:12px;font-weight:700;margin-bottom:2px}.lf-popup p{font-size:10px;color:#666;margin:1px 0}.lf-popup a{display:block;margin-top:6px;color:#c9a84c;font-size:11px;font-weight:700}
+.print-hdr,.print-ftr{display:none}
+@media print{#auth-screen,.hdr,.chat-fab,.chat-win,.toast-ct,.modal-ov,.big-modal,.back-b,.prof-actions,.nav,.theme-btn{display:none!important}body{background:#fff;color:#000}.pg{display:block!important}.prof-wrap{max-width:100%;padding:0}.ic,.prof-hero{border:1px solid #ddd;border-radius:8px;break-inside:avoid}.ic h3{color:#8b6914;border-color:#ddd}.svc-it{background:#f9f5ec}.p-grid{grid-template-columns:1fr}.prof-map{display:none}.print-hdr{display:block!important;text-align:center;padding:16px 0 24px;border-bottom:2px solid #c9a84c;margin-bottom:20px}.print-ftr{display:block!important;text-align:center;margin-top:24px;padding-top:12px;border-top:1px solid #ddd;font-size:10px;color:#999}}
+@media(max-width:768px){.nb span:first-child{display:none}.map-wrap{flex-direction:column}.map-side{width:100%;height:190px;order:2;overflow-x:auto}.map-list{display:flex;overflow-x:auto}.map-itm{min-width:190px;flex-shrink:0}#leaf-map{order:1;min-height:280px;flex:1}.p-grid{grid-template-columns:1fr}.prof-hero{flex-direction:column}.chat-win{width:calc(100vw - 26px)}.frow{grid-template-columns:1fr}.stats-bar{flex-wrap:wrap}.stat-itm{border-left:none;border-bottom:1px solid var(--border);min-width:120px}.charts-grid{grid-template-columns:1fr}.bm-grid{grid-template-columns:1fr}.bm-full{grid-column:1}.adm-nav{flex-wrap:wrap}.adm-nav-btn{padding:6px 12px;font-size:12px}}
+</style>
+</head>
+<body>
+<div id="auth-screen">
+  <div class="auth-bg"></div>
+  <button class="theme-toggle-auth" onclick="toggleTheme()" id="authThemeBtn" title="تبديل المظهر">🌙</button>
+  <button class="admin-gear" onclick="openAdminLogin()" title="دخول لوحة التحكم">⚙️</button>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="logo/hKi0D.jpg" alt="البركة" style="width:80px;height:80px;border-radius:50%;margin:0 auto 8px;display:block;object-fit:cover;">
+      <div class="auth-logo-tx">البركة</div>
+      <div class="auth-logo-sb">منصة الجمعيات الخيرية – محافظة معان</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tab-login" onclick="switchAuthTab('login')">تسجيل الدخول</button>
+      <button class="auth-tab" id="tab-reg" onclick="switchAuthTab('register')">حساب جديد</button>
+    </div>
+    <div class="auth-step on" id="step-login">
+      <div class="auth-field"><label>اسم المستخدم</label><input class="auth-inp" id="li-user" placeholder="أدخل اسم المستخدم" autocomplete="username"></div>
+      <div class="auth-field"><label>كلمة السر</label><input class="auth-inp" id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="auth-btn primary" id="loginBtn" onclick="doLogin()">🔐 دخول</button>
+    </div>
+    <div class="auth-step" id="step-reg1">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:14px">الخطوة 1 من 2 – بياناتك الشخصية</div>
+      <div class="auth-field"><label>اسم المستخدم *</label><input class="auth-inp" id="reg-user" placeholder="اختر اسم مستخدم فريد" autocomplete="username"></div>
+      <div class="auth-field"><label>رقم الهاتف *</label><input class="auth-inp" id="reg-phone" type="tel" placeholder="07xxxxxxxx" autocomplete="tel" dir="ltr"></div>
+      <div class="auth-field"><label>البريد الإلكتروني <span style="color:var(--muted);font-weight:400">(اختياري)</span></label><input class="auth-inp" id="reg-email" type="email" placeholder="example@email.com" autocomplete="email"></div>
+      <button class="auth-btn primary" onclick="sendVerificationCode()">📱 إرسال رمز التحقق</button>
+      <button class="auth-btn secondary" onclick="switchAuthTab('login')">لديّ حساب بالفعل</button>
+    </div>
+    
+    <!-- Admin Login Button -->
+    <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-outline" style="width:100%;font-size:13px" onclick="openAdminLogin()">🔐 الدخول كمدير النظام</button>
+    </div>
+  </div>
+</div>
+<header class="hdr" id="mainHdr" style="display:none">
+  <div class="logo" onclick="nav('home')">
+    <img src="logo/hKi0D.jpg" alt="البركة" style="width:32px;height:32px;border-radius:8px;object-fit:cover;">
+    <div><div class="logo-tx">البركة</div><div class="logo-sb">الجمعيات الخيرية – معان</div></div>
+  </div>
+  <nav class="nav">
+    <button class="nb" id="nb-assoc" onclick="nav('associations')"><span>🏛</span><span>الجمعيات</span></button>
+    <button class="nb" id="nb-map" onclick="nav('map')"><span>🗺️</span><span>الخريطة</span></button>
+    <button class="nb primary" id="nb-reg" onclick="nav('register')"><span>➕</span><span>سجّل جمعيتك</span></button>
+    <div class="user-pill" id="userPill"><div class="av" id="userAv">؟</div><span id="userNameDisplay">مستخدم</span></div>
+    <button class="nb" id="nb-adm" onclick="nav('admin')" style="display:none"><span>⚙️</span><span>الإدارة</span></button>
+    <button class="nb ghost" onclick="doLogout()" title="خروج">🚪</button>
+    <button class="theme-btn" onclick="toggleTheme()" id="mainThemeBtn" title="تبديل المظهر">🌙</button>
+  </nav>
+</header>
+<div id="pg-home" class="pg"></div>
+<div id="pg-associations" class="pg"></div>
+<div id="pg-map" class="pg"></div>
+<div id="pg-register" class="pg"></div>
+<div id="pg-profile" class="pg"></div>
+<div id="pg-admin" class="pg"></div>
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" style="display:none">🤖</button>
+<div class="chat-win" id="chatWin">
+  <div class="chat-hd">
+    <div class="chat-av">🌟</div>
+    <div><div class="chat-ti">نور – المساعد الذكي</div><div class="chat-st">● وضع تجريبي</div></div>
+    <button class="chat-cl" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="qr-row">
+    <button class="qr" onclick="sendQR(this)">🍞 مساعدة غذائية</button>
+    <button class="qr" onclick="sendQR(this)">🧒 رعاية الأيتام</button>
+    <button class="qr" onclick="sendQR(this)">♿ ذوو احتياجات خاصة</button>
+    <button class="qr" onclick="sendQR(this)">📚 دعم تعليمي</button>
+  </div>
+  <div class="chat-inp-row">
+    <input class="chat-inp" id="chatInp" placeholder="اسألني…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-snd" onclick="sendChat()">➤</button>
+  </div>
+</div>
+<div class="modal-ov" id="verifyModal">
+  <div class="modal" style="max-width:400px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:44px;margin-bottom:10px">🔐</div>
+      <h3 id="verifyTitle">التحقق من رقم الهاتف</h3>
+      <p id="verifyDesc" style="font-size:13px;color:var(--muted)">سيتم إرسال رمز التحقق إلى الرقم</p>
+      <div id="verifyPhoneDisplay" style="font-size:15px;font-weight:700;color:var(--gold);margin-top:5px"></div>
+    </div>
+    
+    <div id="verifyMethodStep">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:12px">اختر طريقة التحقق:</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-outline" onclick="selectVerifyMethod('display')" style="width:100%;text-align:right;padding:14px">
+          <span style="font-size:20px">👁️</span>
+          <span>عرض الرمز على الشاشة</span>
+          <span style="font-size:11px;color:var(--muted);margin-right:auto">(مجاني)</span>
+        </button>
+        <button class="btn btn-outline" onclick="selectVerifyMethod('sms')" style="width:100%;text-align:right;padding:14px">
+          <span style="font-size:20px">💬</span>
+          <span>رسالة SMS</span>
+          <span style="font-size:11px;color:var(--muted);margin-right:auto">(مجاني 1/يوم)</span>
+        </button>
+        <button class="btn btn-outline" onclick="selectVerifyMethod('whatsapp')" style="width:100%;text-align:right;padding:14px">
+          <span style="font-size:20px">📱</span>
+          <span>واتساب</span>
+          <span style="font-size:11px;color:var(--green);margin-right:auto">(مجاني 1000/شهر)</span>
+        </button>
+      </div>
+    </div>
+    
+    <div id="verifyOTPStep" style="display:none">
+      <div id="verifyOTPDisplay" style="display:none;background:var(--gold-bg);border:2px dashed var(--gold);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:5px">الرمز التجريبي (للاختبار):</div>
+        <div id="otpDisplayCode" style="font-size:32px;font-weight:900;color:var(--gold);letter-spacing:6px"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ هذا للاختبار فقط</div>
+      </div>
+      <div class="auth-field"><label>أدخل رمز التحقق</label><input class="auth-inp" id="verify-otp" type="text" placeholder="______" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyOTP()"></div>
+      <button class="auth-btn primary" id="verifyBtn" onclick="verifyOTP()">✅ تحقق</button>
+      <div style="text-align:center;margin-top:12px">
+        <span style="font-size:12px;color:var(--muted)">لم تستلم الرمز؟</span>
+        <button onclick="resendOTP()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-weight:700;margin-right:5px" id="resendBtn">إعادة الإرسال</button>
+        <span id="resendTimer" style="font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div style="text-align:center;margin-top:10px">
+        <button onclick="backToMethodSelect()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">← تغيير طريقة التحقق</button>
+      </div>
+    </div>
+    
+    <div style="text-align:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <button onclick="closeModal('verifyModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">إلغاء</button>
+    </div>
+  </div>
+</div>
+<div class="modal-ov" id="adminLoginModal">
+  <div class="modal">
+    <h3>⚙️ دخول لوحة التحكم</h3>
+    <p>هذه المنطقة مخصصة للمسؤولين فقط</p>
+    <div class="auth-field" style="margin-bottom:12px"><label>اسم المستخدم</label><input class="auth-inp" id="adm-user" placeholder="admin" autocomplete="username"></div>
+    <div class="auth-field" style="margin-bottom:18px"><label>كلمة السر</label><input class="auth-inp" id="adm-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
+    <div class="modal-btns"><button class="btn btn-outline" onclick="closeModal('adminLoginModal')">إلغاء</button><button class="btn btn-gold" onclick="doAdminLogin()">🔐 دخول</button></div>
+  </div>
+</div>
+<div class="modal-ov" id="confirmModal"><div class="modal"><h3 id="confirmTitle"></h3><p id="confirmBody"></p><div class="modal-btns" id="confirmBtns"></div></div></div>
+<div class="toast-ct" id="toastCt"></div>
+<script>
+const SAMPLE=[{id:'s1',name:'جمعية معان للتنمية الاجتماعية',category:'عامة',description:'إحدى أعرق الجمعيات الخيرية في محافظة معان، تأسست عام 1992.',services:['توزيع المساعدات الغذائية','كفالة الأيتام','برامج التدريب المهني','الرعاية الاجتماعية'],address:'شارع الملك الحسين، معان',area:'وسط المدينة',lat:30.1942,lng:35.7340,phone:'03-2130100',email:'info@maansociety.jo',founded_year:1992,working_hours:'الأحد – الخميس: 8:00 – 15:00',contact_name:'أبو خالد',status:'approved',beneficiaries:1200},{id:'s2',name:'جمعية رعاية الأيتام',category:'رعاية أيتام',description:'متخصصة في رعاية الأيتام وتوفير التعليم والرعاية الصحية.',services:['كفالة الأيتام','توفير التعليم','الرعاية الصحية','الدعم النفسي'],address:'شارع الأمير محمد، معان',area:'شمال معان',lat:30.2050,lng:35.7280,phone:'03-2131200',email:'orphans@maan.jo',founded_year:2001,working_hours:'يومياً: 8:00 – 17:00',contact_name:'أم سامر',status:'approved',beneficiaries:430},{id:'s3',name:'جمعية ذوي الاحتياجات الخاصة',category:'ذوو احتياجات خاصة',description:'تعنى بخدمة ذوي الإعاقة وتقديم التأهيل والتدريب.',services:['التأهيل الطبي','التدريب المهني','الدمج المجتمعي'],address:'شارع الوحدة، معان',area:'غرب معان',lat:30.1880,lng:35.7180,phone:'03-2132300',email:'special@maan.jo',founded_year:2005,working_hours:'الأحد – الخميس: 8:00 – 14:00',contact_name:'د. منى',status:'approved',beneficiaries:280},{id:'s4',name:'جمعية المرأة المعانية',category:'تنمية المرأة',description:'تهتم بتمكين المرأة اقتصادياً واجتماعياً.',services:['دورات الخياطة','تمكين المرأة','دعم المشاريع الصغيرة'],address:'شارع الأميرة بسمة، معان',area:'شرق معان',lat:30.1960,lng:35.7450,phone:'03-2133400',email:'women@maan.jo',founded_year:1998,working_hours:'الأحد – الخميس: 9:00 – 14:00',contact_name:'رانيا',status:'approved',beneficiaries:650},{id:'s5',name:'جمعية الإغاثة والتنمية',category:'إغاثة',description:'متخصصة في توزيع السلال الغذائية والمساعدات.',services:['مساعدات غذائية طارئة','سلال رمضانية','مساعدات الشتاء'],address:'المنطقة الصناعية، معان',area:'جنوب معان',lat:30.1820,lng:35.7350,phone:'03-2134500',email:'relief@maan.jo',founded_year:2010,working_hours:'الأحد – الخميس: 8:00 – 16:00',contact_name:'الشيخ موسى',status:'approved',beneficiaries:890},{id:'s6',name:'جمعية التعليم والتدريب',category:'تعليم',description:'تقدم منحاً دراسية وتدريباً مهنياً للشباب.',services:['منح دراسية','دروس تقوية','تدريب مهني'],address:'بجانب جامعة الحسين، معان',area:'شمال غرب معان',lat:30.2100,lng:35.7200,phone:'03-2135600',email:'education@maan.jo',founded_year:2008,working_hours:'الأحد – الخميس: 9:00 – 16:00',contact_name:'أ. عمر',status:'approved',beneficiaries:520}];
+const CAT_ICONS={'عامة':'🏛','رعاية أيتام':'👶','ذوو احتياجات خاصة':'♿','تنمية المرأة':'👩','إغاثة':'🍞','تعليم':'📚','صحة':'🏥','تنمية اقتصادية':'💼'};
+const CAT_COLORS={'عامة':'bdg-gold','رعاية أيتام':'bdg-blue','ذوو احتياجات خاصة':'bdg-purple','تنمية المرأة':'bdg-orange','إغاثة':'bdg-red','تعليم':'bdg-green','صحة':'bdg-blue','تنمية اقتصادية':'bdg-gold'};
+const AREAS=['وسط المدينة','شمال معان','جنوب معان','شرق معان','غرب معان','شمال غرب معان','ضواحي معان'];
+const ALL_SERVICES=['توزيع المساعدات الغذائية','كفالة الأيتام','الرعاية الصحية','التدريب المهني','الدعم النفسي','المساعدات النقدية','التعليم والمنح','تمكين المرأة','ذوو الاحتياجات الخاصة','الإغاثة الطارئة','محو الأمية','توظيف الخريجين','التوعية الاجتماعية','مهارات الحياة'];
+const S={page:'home',assocs:[],filtered:[],currentId:null,chat:[],chatOpen:false,leafMap:null,pickerMap:null,markers:[],mapSel:null,formStep:1,formData:{},pickedCoord:null,adminTab:'stats',assocFilter:{search:'',status:''},userFilter:'',charts:{},currentUser:null,editingAssocId:null,filter:{search:'',cat:''}};
+function toggleTheme(){const isDark=document.documentElement.getAttribute('data-theme')==='dark';const t=isDark?'light':'dark';applyTheme(t);localStorage.setItem('khayrna-theme',t);}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);const ic=t==='dark'?'🌙':'☀️';document.getElementById('authThemeBtn').textContent=ic;const mb=document.getElementById('mainThemeBtn');if(mb)mb.textContent=ic;}
+const savedTheme=localStorage.getItem('khayrna-theme')||'dark';applyTheme(savedTheme);
+function switchAuthTab(tab){document.getElementById('tab-login').classList.toggle('on',tab==='login');document.getElementById('tab-reg').classList.toggle('on',tab==='register');document.querySelectorAll('.auth-step').forEach(s=>s.classList.remove('on'));document.getElementById(tab==='login'?'step-login':'step-reg1').classList.add('on');}
+function doDemoRegister(){S.currentUser={id:'demo',username:'مستخدم جديد',role:'user',phone:'07xxxxxxxx'};enterApp();toast('تم إنشاء حساب تجريبي بنجاح! 🎉','ok');}
+function doLogin(){const username=document.getElementById('li-user').value.trim();const password=document.getElementById('li-pass').value;if(!username||!password){toast('أدخل اسم المستخدم وكلمة السر','err');return;}if(username==='admin'&&password==='admin'){S.currentUser={id:'admin-001',username:'admin',role:'admin',phone:'0791234567'};enterApp();toast('مرحباً مدير النظام! 👑','ok');}else{S.currentUser={id:'user-1',username,role:'user',phone:'07xxxxxxxx'};enterApp();toast('مرحباً '+username+'! 👋','ok');}}
+function doAdminLogin(){const u=document.getElementById('adm-user').value.trim();const p=document.getElementById('adm-pass').value;if(!u||!p){toast('أدخل بيانات الدخول','err');return;}if(u==='admin'&&p==='admin'){S.currentUser={id:'admin-001',username:'admin',role:'admin',phone:'0791234567'};closeModal('adminLoginModal');enterApp();setTimeout(()=>nav('admin'),200);toast('مرحباً مدير النظام! 👑','ok');}else{toast('بيانات الدخول غير صحيحة','err');}}
+function enterApp(){document.getElementById('auth-screen').classList.add('hide');document.getElementById('mainHdr').style.display='flex';document.getElementById('chatFab').style.display='flex';document.getElementById('userNameDisplay').textContent=S.currentUser?.username||'مستخدم';document.getElementById('userAv').textContent=(S.currentUser?.username||'م')[0].toUpperCase();if(S.currentUser?.role==='admin')document.getElementById('nb-adm').style.display='flex';nav('home');S.assocs=[...SAMPLE];}
+function doLogout(){S.currentUser=null;document.getElementById('auth-screen').classList.remove('hide');document.getElementById('mainHdr').style.display='none';document.getElementById('chatFab').style.display='none';document.getElementById('chatWin').classList.remove('open');switchAuthTab('login');document.getElementById('li-pass').value='';}
+function nav(page,extra={}){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById('pg-'+page)?.classList.add('on');const nbId={associations:'nb-assoc',map:'nb-map',register:'nb-reg',admin:'nb-adm'}[page];if(nbId)document.getElementById(nbId)?.classList.add('on');Object.assign(S,extra);S.page=page;window.scrollTo(0,0);if(page==='home')renderHome();else if(page==='associations')renderAssociations();else if(page==='map')renderMap();else if(page==='register')renderRegister();else if(page==='profile')renderProfile(S.currentId);else if(page==='admin')renderAdminPage();}
+function animateCounter(el,target,dur=1200){const start=performance.now(),from=parseInt(el.textContent.replace(/\D/g,''))||0;const step=t=>{const p=Math.min((t-start)/dur,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(from+(target-from)*ease).toLocaleString('ar');if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);}
+function runCounters(){document.querySelectorAll('[data-count]').forEach(el=>{const o=new IntersectionObserver(en=>{if(en[0].isIntersecting){animateCounter(el,parseInt(el.dataset.count));o.disconnect();}});o.observe(el);});}
+const CHART_COLORS=['#c9a84c','#3498db','#9b59b6','#e67e22','#e74c3c','#27ae60','#1abc9c','#e91e8c'];
+function renderCharts(assocs){Object.values(S.charts).forEach(c=>{try{c.destroy()}catch{}});S.charts={};const catData={};assocs.forEach(a=>{catData[a.category]=(catData[a.category]||0)+1;});const catCtx=document.getElementById('chart-cat')?.getContext('2d');if(catCtx)S.charts.cat=new Chart(catCtx,{type:'doughnut',data:{labels:Object.keys(catData),datasets:[{data:Object.values(catData),backgroundColor:CHART_COLORS,borderWidth:2,borderColor:'var(--card)',hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'var(--text)',font:{family:'Tajawal',size:11},padding:10}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed}`}}}}});const sorted=[...assocs].sort((a,b)=>(b.beneficiaries||0)-(a.beneficiaries||0)).slice(0,6);const barCtx=document.getElementById('chart-bens')?.getContext('2d');if(barCtx)S.charts.bar=new Chart(barCtx,{type:'bar',data:{labels:sorted.map(a=>a.name.length>14?a.name.slice(0,14)+'…':a.name),datasets:[{data:sorted.map(a=>a.beneficiaries||0),backgroundColor:CHART_COLORS.slice(0,sorted.length),borderRadius:7,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x.toLocaleString('ar')} مستفيد`}}},scales:{x:{ticks:{color:'var(--muted)',font:{family:'Tajawal'}},grid:{color:'rgba(128,128,128,.08)'}},y:{ticks:{color:'var(--text)',font:{family:'Tajawal',size:10}},grid:{display:false}}}}});}
+function renderHome(){const assocs=S.assocs.length?S.assocs:SAMPLE;const bens=assocs.reduce((s,a)=>s+(a.beneficiaries||0),0);document.getElementById('pg-home').innerHTML=`<div class="hero"><div class="hero-badge">🌟 خدمة المجتمع في معان</div><h1>منصة <span>البركة</span><br>لجمعيات معان الخيرية</h1><p>منصة رقمية تجمع جميع الجمعيات الخيرية في محافظة معان. ابحث عن المساعدة التي تحتاجها أو سجّل جمعيتك.</p><div class="hero-btns"><button class="btn btn-gold" onclick="nav('associations')">🔍 استكشف الجمعيات</button><button class="btn btn-outline" onclick="nav('map')">🗺️ الخريطة</button><button class="btn btn-outline" onclick="toggleChat()">🤖 اسأل نور</button></div></div><div class="stats-bar"><div class="stat-itm"><div class="stat-n" data-count="${assocs.length}">0</div><div class="stat-l">جمعية مسجّلة</div></div><div class="stat-itm"><div class="stat-n" data-count="${bens}">0</div><div class="stat-l">مستفيد سنوياً</div></div><div class="stat-itm"><div class="stat-n" data-count="${Object.keys(CAT_ICONS).length}">0</div><div class="stat-l">تخصص خيري</div></div><div class="stat-itm"><div class="stat-n" data-count="7">0</div><div class="stat-l">مناطق في معان</div></div></div><div class="charts-sec"><div class="sec-h">📊 إحصائيات المنصة</div><div class="sec-s" style="margin-bottom:18px">نظرة شاملة على الجمعيات والمستفيدين</div><div class="charts-grid"><div class="chart-card"><h3>🗂 التوزيع حسب التصنيف</h3><div class="chart-box"><canvas id="chart-cat"></canvas></div></div><div class="chart-card"><h3>👥 المستفيدون حسب الجمعية</h3><div class="chart-box"><canvas id="chart-bens"></canvas></div></div></div></div><div class="sec" style="padding-top:0"><div class="sec-h">🗂 تصفح حسب التصنيف</div><div class="sec-s">اختر نوع المساعدة التي تبحث عنها</div><div class="cats-grid">${Object.entries(CAT_ICONS).map(([c,ic])=>`<div class="cat-c" onclick="nav('associations');S.filter.cat='${c}';renderAssociationsContent()"><div class="cat-ic">${ic}</div><div class="cat-nm">${c}</div><div class="cat-ct">${SAMPLE.filter(a=>a.category===c).length} جمعية</div></div>`).join('')}</div></div><div class="sec" style="padding-top:0"><div class="sec-h">⭐ أبرز الجمعيات</div><div class="sec-s">جمعيات معتمدة في معان</div><div class="feat-grid">${SAMPLE.slice(0,3).map(a=>assocCard(a)).join('')}</div></div>`;setTimeout(runCounters,100);setTimeout(()=>renderCharts(assocs),150);}
+function assocCard(a){const ic=CAT_ICONS[a.category]||'🏛',cl=CAT_COLORS[a.category]||'bdg-gold';const svcs=Array.isArray(a.services)?a.services.slice(0,3):[];return`<div class="ac" onclick="S.currentId='${a.id}';nav('profile')"><div class="ac-hd"><div class="ac-av">${ic}</div><div><div class="ac-nm">${a.name}</div><span class="bdg ${cl}" style="display:inline-flex;margin-top:3px">${a.category}</span></div></div><div class="ac-bd"><div class="ac-ds">${a.description}</div><div class="svc-chips">${svcs.map(s=>`<span class="svc-chip">${s}</span>`).join('')}${a.services?.length>3?`<span class="svc-chip">+${a.services.length-3}</span>`:''}</div><div class="ac-ft"><span>📞 ${a.phone||'—'}</span><span>📍 ${a.area||''}</span><span style="color:var(--gold);font-weight:700">عرض →</span></div></div></div>`;}
+function renderAssociations(){document.getElementById('pg-associations').innerHTML=`<div class="flt-bar"><input class="s-inp" id="s-search" placeholder="🔍 ابحث عن جمعية…" value="${S.filter.search}" oninput="debF(this.value)"><select class="f-sel" id="s-cat" onchange="S.filter.cat=this.value;renderAssociationsContent()"><option value="">كل التصنيفات</option>${Object.keys(CAT_ICONS).map(c=>`<option value="${c}"${S.filter.cat===c?' selected':''}>${CAT_ICONS[c]} ${c}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="S.filter={search:'',cat:''};document.getElementById('s-search').value='';document.getElementById('s-cat').value='';renderAssociationsContent()">✕ مسح</button></div><div class="cards-wrap"><div id="assoc-count" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div><div class="cards-grid" id="cards-grid"></div></div>`;renderAssociationsContent();}
+let _ft=null;function debF(v){S.filter.search=v;clearTimeout(_ft);_ft=setTimeout(renderAssociationsContent,350);}
+function renderAssociationsContent(){const g=document.getElementById('cards-grid');if(!g)return;const d=[...SAMPLE].filter(a=>{const sc=S.filter.cat?a.category===S.filter.cat:true;const ss=S.filter.search?a.name.toLowerCase().includes(S.filter.search.toLowerCase())||a.description?.toLowerCase().includes(S.filter.search.toLowerCase()):true;return sc&&ss;});document.getElementById('assoc-count').textContent=`${d.length} جمعية`;g.innerHTML=d.length?d.map(a=>assocCard(a)).join(''):'<div class="empty-s"><div class="ei">🔍</div><div class="et">لا توجد نتائج</div></div>';}
+function renderMap(){document.getElementById('pg-map').innerHTML=`<div class="map-wrap"><div id="leaf-map"></div><div class="map-side"><div class="map-side-hd"><h3>📍 الجمعيات على الخريطة</h3><input class="s-inp" placeholder="بحث…" oninput="filterMapList(this.value)" style="font-size:12px"></div><div class="map-list" id="map-list"></div></div></div>`;setTimeout(initMap,50);}
+async function initMap(){if(typeof L==='undefined'){setTimeout(initMap,300);return;}if(S.leafMap){S.leafMap.remove();S.leafMap=null;}const goldIcon=L.divIcon({html:`<div style="background:var(--gold);width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #000;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,className:'',iconSize:[28,28],iconAnchor:[14,28],popupAnchor:[0,-32]});const map=L.map('leaf-map',{center:[30.1942,35.7340],zoom:13});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);S.leafMap=map;S.markers=[];SAMPLE.forEach(a=>{if(!a.lat||!a.lng)return;const mk=L.marker([a.lat,a.lng],{icon:goldIcon}).addTo(map).bindPopup(`<div class="lf-popup"><h4>${CAT_ICONS[a.category]||'🏛'} ${a.name}</h4><p>${a.category}</p><p>📍 ${a.area||a.address}</p><p>📞 ${a.phone||'—'}</p><a href="javascript:void(0)" onclick="S.currentId='${a.id}';nav('profile')">عرض الملف ←</a></div>`,{maxWidth:210});S.markers.push({id:a.id,marker:mk});});buildMapList(SAMPLE);}
+function buildMapList(d){const el=document.getElementById('map-list');if(!el)return;el.innerHTML=d.map(a=>`<div class="map-itm" id="mi-${a.id}" onclick="selectMapItem('${a.id}')"><div class="map-itm-nm">${CAT_ICONS[a.category]||'🏛'} ${a.name}</div><div style="margin-top:2px"><span class="bdg ${CAT_COLORS[a.category]||'bdg-gold'}" style="font-size:10px">${a.category}</span></div><div class="map-itm-ad">📍 ${a.area||a.address||''}</div></div>`).join('');}
+function filterMapList(q){const s=q.toLowerCase();buildMapList(SAMPLE.filter(a=>a.name.toLowerCase().includes(s)||a.area?.toLowerCase().includes(s)));}
+function selectMapItem(id){if(S.mapSel)document.getElementById('mi-'+S.mapSel)?.classList.remove('sel');S.mapSel=id;document.getElementById('mi-'+id)?.classList.add('sel');const m=S.markers.find(x=>x.id===id);if(m){S.leafMap?.setView(m.marker.getLatLng(),16);m.marker.openPopup();}}
+function renderRegister(){S.formStep=1;S.formData={};S.pickedCoord=null;document.getElementById('pg-register').innerHTML=`<div class="reg-wrap"><div class="reg-hd"><div style="font-size:38px;margin-bottom:10px">🏛</div><h2>تسجيل جمعية خيرية</h2><p>سجّل جمعيتك للوصول للمحتاجين في معان</p></div><div class="steps-row"><div class="step-d on" id="sd1">1</div><div class="step-ln" id="sl1"></div><div class="step-d" id="sd2">2</div><div class="step-ln" id="sl2"></div><div class="step-d" id="sd3">3</div><div class="step-ln" id="sl3"></div><div class="step-d" id="sd4">4</div></div><div class="fc"><div class="fs on" id="fs1"><div style="font-size:16px;font-weight:800;margin-bottom:16px">1️⃣ المعلومات الأساسية</div><div class="fg"><label>اسم الجمعية *</label><input class="fi" id="f-name" placeholder="اسم الجمعية"></div><div class="fg"><label>التصنيف *</label><select class="fsl" id="f-cat"><option value="">اختر</option>${Object.keys(CAT_ICONS).map(c=>`<option value="${c}">${CAT_ICONS[c]} ${c}</option>`).join('')}</select></div><div class="fg"><label>نبذة *</label><textarea class="fta" id="f-desc" rows="3" placeholder="وصف الجمعية..."></textarea></div><div class="frow"><div class="fg"><label>سنة التأسيس</label><input class="fi" id="f-year" type="number" placeholder="2005"></div><div class="fg"><label>اسم المسؤول</label><input class="fi" id="f-contact" placeholder="الاسم الكامل"></div></div></div><div class="fs" id="fs2"><div style="font-size:16px;font-weight:800;margin-bottom:16px">2️⃣ الخدمات المقدمة</div><div class="fg"><label>اختر الخدمات *</label><div class="svc-cbs">${ALL_SERVICES.map(s=>`<label class="cb-itm"><input type="checkbox" value="${s}"><span>${s}</span></label>`).join('')}</div></div><div class="fg" style="margin-top:12px"><label>خدمات إضافية (مفصولة بفاصلة)</label><input class="fi" id="f-svc-extra" placeholder="خدمة أخرى..."></div><div class="fg"><label>أوقات الدوام</label><input class="fi" id="f-hours" placeholder="الأحد – الخميس: 8:00 – 15:00"></div></div><div class="fs" id="fs3"><div style="font-size:16px;font-weight:800;margin-bottom:16px">3️⃣ التواصل والموقع</div><div class="frow"><div class="fg"><label>الهاتف *</label><input class="fi" id="f-phone" type="tel" placeholder="03-xxxxxxx"></div><div class="fg"><label>البريد الإلكتروني</label><input class="fi" id="f-email" type="email"></div></div><div class="frow"><div class="fg"><label>المنطقة</label><select class="fsl" id="f-area"><option value="">اختر</option>${AREAS.map(a=>`<option>${a}</option>`).join('')}</select></div><div class="fg"><label>العنوان</label><input class="fi" id="f-addr" placeholder="الشارع والحي"></div></div></div><div class="fs" id="fs4"><div style="font-size:16px;font-weight:800;margin-bottom:16px">4️⃣ مراجعة وإرسال</div><div id="confirm-summary" style="background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:16px;font-size:13px;line-height:2.2;margin-bottom:14px"></div><div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:9px;padding:14px;font-size:13px;color:var(--muted)">⚠️ سيتم مراجعة طلبك خلال 1-3 أيام عمل</div></div><div class="form-nav"><button class="btn btn-outline btn-sm" id="btn-prev" onclick="formPrev()" style="display:none">→ السابق</button><div></div><button class="btn btn-gold btn-sm" id="btn-next" onclick="formNext()">التالي ←</button></div></div></div>`;}
+function formNext(){if(S.formStep===1){const n=document.getElementById('f-name')?.value.trim(),c=document.getElementById('f-cat')?.value,d=document.getElementById('f-desc')?.value.trim();if(!n||!c||!d){toast('الحقول * مطلوبة','err');return;}S.formData.name=n;S.formData.category=c;S.formData.description=d;S.formData.founded_year=document.getElementById('f-year')?.value||'';S.formData.contact_name=document.getElementById('f-contact')?.value||'';}if(S.formStep===2){const ch=[...document.querySelectorAll('.svc-cbs input:checked')].map(i=>i.value);const ex=(document.getElementById('f-svc-extra')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);S.formData.services=[...ch,...ex];if(!S.formData.services.length){toast('اختر خدمة واحدة على الأقل','err');return;}S.formData.working_hours=document.getElementById('f-hours')?.value||'';}if(S.formStep===3){const p=document.getElementById('f-phone')?.value.trim();if(!p){toast('الهاتف مطلوب','err');return;}S.formData.phone=p;S.formData.email=document.getElementById('f-email')?.value||'';S.formData.area=document.getElementById('f-area')?.value||'';S.formData.address=document.getElementById('f-addr')?.value||'';const su=document.getElementById('confirm-summary');if(su)su.innerHTML=`<b>الجمعية:</b> ${S.formData.name}<br><b>التصنيف:</b> ${S.formData.category}<br><b>الخدمات:</b> ${S.formData.services.join('، ')}<br><b>الهاتف:</b> ${S.formData.phone}<br><b>المنطقة:</b> ${S.formData.area||'—'}`;}if(S.formStep===4){SAMPLE.push({...S.formData,id:'n'+Date.now(),status:'pending',beneficiaries:0});toast('تم إرسال الطلب بنجاح! ستتم المراجعة خلال 1-3 أيام 🎉','ok');setTimeout(()=>nav('home'),1800);return;}document.getElementById('fs'+S.formStep).classList.remove('on');S.formStep++;document.getElementById('fs'+S.formStep).classList.add('on');updateFormStepUI();}
+function formPrev(){document.getElementById('fs'+S.formStep).classList.remove('on');S.formStep--;document.getElementById('fs'+S.formStep).classList.add('on');updateFormStepUI();}
+function updateFormStepUI(){[1,2,3,4].forEach(i=>{document.getElementById('sd'+i)?.classList.toggle('on',i===S.formStep);document.getElementById('sd'+i)?.classList.toggle('done',i<S.formStep);document.getElementById('sl'+i)?.classList.toggle('done',i<S.formStep);});const p=document.getElementById('btn-prev'),n=document.getElementById('btn-next');if(p)p.style.display=S.formStep>1?'inline-flex':'none';if(n)n.textContent=S.formStep===4?'✅ إرسال':'التالي ←';}
+function renderProfile(id){const pg=document.getElementById('pg-profile');const a=SAMPLE.find(x=>x.id===id);if(!a){pg.innerHTML='<div class="empty-s"><div class="ei">❌</div><div class="et">الجمعية غير موجودة</div></div>';return;}const ic=CAT_ICONS[a.category]||'🏛',cl=CAT_COLORS[a.category]||'bdg-gold';const svcs=Array.isArray(a.services)?a.services:[];pg.innerHTML=`<div class="print-hdr"><h1>🕌 منصة البركة – ملف الجمعية</h1><p>منصة الجمعيات الخيرية في محافظة معان، الأردن</p></div><div class="prof-wrap"><button class="back-b" onclick="nav('associations')">← العودة</button><div class="prof-hero"><div class="prof-av">${ic}</div><div style="flex:1"><div class="prof-h1">${a.name}</div><span class="bdg ${cl}">${a.category}</span><div class="prof-meta">${a.area?`<div class="meta-i">📍 ${a.area}</div>`:''}${a.founded_year?`<div class="meta-i">📅 ${a.founded_year}</div>`:''}${a.working_hours?`<div class="meta-i">🕐 ${a.working_hours}</div>`:''}${a.beneficiaries?`<div class="meta-i">👥 ${a.beneficiaries.toLocaleString('ar')} مستفيد</div>`:''}</div><div class="prof-actions"><button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ طباعة PDF</button><button class="btn btn-outline btn-sm" onclick="copyLink()">🔗 نسخ الرابط</button><button class="btn btn-gold btn-sm" onclick="toggleChat()">🤖 اسأل نور</button></div></div></div><div class="p-grid"><div><div class="ic"><h3>📋 عن الجمعية</h3><p style="font-size:13px;line-height:1.8;color:var(--muted)">${a.description}</p></div><div class="ic"><h3>🛠 الخدمات</h3><div class="svc-lst">${svcs.map(s=>`<div class="svc-it"><div class="svc-dot"></div>${s}</div>`).join('')}</div></div>${a.lat&&a.lng?`<div class="ic"><h3>🗺️ الموقع</h3><div class="prof-map" id="prof-map-${a.id}"></div></div>`:''}</div><div><div class="ic"><h3>📞 التواصل</h3><div class="cont-lst">${a.phone?`<div class="cont-it"><span class="cont-ic">📞</span><a href="tel:${a.phone}" style="color:var(--gold)">${a.phone}</a></div>`:''}${a.email?`<div class="cont-it"><span class="cont-ic">📧</span><a href="mailto:${a.email}" style="color:var(--gold)">${a.email}</a></div>`:''}${a.address?`<div class="cont-it"><span class="cont-ic">📍</span>${a.address}</div>`:''}${a.contact_name?`<div class="cont-it"><span class="cont-ic">👤</span>${a.contact_name}</div>`:''}</div></div>${a.working_hours?`<div class="ic"><h3>🕐 أوقات العمل</h3><div style="font-size:13px;color:var(--muted);line-height:1.8">${a.working_hours}</div></div>`:''}</div></div></div><div class="print-ftr">طُبع من منصة "خيرنا معان" – ${new Date().toLocaleDateString('ar-JO')}</div>`;if(a.lat&&a.lng){setTimeout(()=>{if(typeof L==='undefined')return;const m=L.map('prof-map-'+a.id,{center:[a.lat,a.lng],zoom:15,zoomControl:false,scrollWheelZoom:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);L.marker([a.lat,a.lng]).addTo(m).bindPopup(`<div class="lf-popup"><h4>${ic} ${a.name}</h4></div>`).openPopup();},100);}}
+function copyLink(){navigator.clipboard?.writeText(location.href).then(()=>toast('تم نسخ الرابط ✅','ok')).catch(()=>toast('تم نسخ الرابط ✅','ok'));}
+function renderAdminPage(){if(S.currentUser?.role!=='admin'){document.getElementById('pg-admin').innerHTML=`<div class="adm-login"><div style="text-align:center;padding:40px 0"><div style="font-size:44px">🔒</div><div style="font-size:16px;font-weight:700;margin-top:12px;color:var(--muted)">هذه الصفحة للمسؤولين فقط</div></div></div>`;return;}document.getElementById('pg-admin').innerHTML=`<div class="adm-wrap"><div class="adm-hdr"><div><h2>⚙️ لوحة تحكم الإدارة</h2><div style="font-size:12px;color:var(--muted);margin-top:2px">مرحباً ${S.currentUser.username} – مدير النظام</div></div><div class="adm-nav"><button class="adm-nav-btn${S.adminTab==='stats'?' on':''}" onclick="switchAdminTab('stats')">📊 الإحصائيات</button><button class="adm-nav-btn${S.adminTab==='assocs'?' on':''}" onclick="switchAdminTab('assocs')">🏛 الجمعيات</button>
+<button class="adm-nav-btn${S.adminTab==='import'?' on':''}" onclick="switchAdminTab('import')">📥 استيراد CSV</button><button class="adm-nav-btn${S.adminTab==='users'?' on':''}" onclick="switchAdminTab('users')">👥 المستخدمون</button></div></div><div id="admin-body"></div></div>`;loadAdminTab();}
+function switchAdminTab(t){S.adminTab=t;document.querySelectorAll('.adm-nav-btn').forEach(b=>b.classList.remove('on'));const btns=document.querySelectorAll('.adm-nav-btn');const labels={stats:'الإحصائيات',assocs:'الجمعيات',users:'المستخدمون'};btns.forEach((b,i)=>{if(b.textContent.includes(labels[t]))b.classList.add('on');});loadAdminTab();}
+async function loadAdminTab(){const el=document.getElementById('admin-body');if(!el)return;el.innerHTML='<div class="spin-w"><div class="spin"></div></div>';if(S.adminTab==='stats')await renderAdminStats(el);else if(S.adminTab==='assocs')await renderAdminAssocs(el);else if(S.adminTab==='users')await renderAdminUsers(el);else if(S.adminTab==='import')await renderImportTab(el);}
+async function renderAdminStats(el){const bens=SAMPLE.reduce((s,a)=>s+(a.beneficiaries||0),0);el.innerHTML=`<div class="s-cards"><div class="sc"><div class="sc-ic">🏛</div><div class="sc-n" data-count="${SAMPLE.length}">0</div><div class="sc-l">إجمالي الجمعيات</div></div><div class="sc"><div class="sc-ic">✅</div><div class="sc-n" data-count="${SAMPLE.filter(a=>a.status==='approved').length}" style="color:var(--green)">0</div><div class="sc-l">معتمدة</div></div><div class="sc"><div class="sc-ic">⏳</div><div class="sc-n" data-count="${SAMPLE.filter(a=>a.status==='pending').length}" style="color:#f39c12">0</div><div class="sc-l">قيد المراجعة</div></div><div class="sc"><div class="sc-ic">👥</div><div class="sc-n" data-count="${bens}" style="color:var(--blue)">0</div><div class="sc-l">مستفيد</div></div><div class="sc"><div class="sc-ic">👤</div><div class="sc-n">1</div><div class="sc-l">مستخدم مسجّل</div></div></div><div class="charts-grid"><div class="chart-card"><h3>📊 توزيع الجمعيات</h3><div class="chart-box"><canvas id="admin-chart-cat"></canvas></div></div><div class="chart-card"><h3>👥 المستفيدون</h3><div class="chart-box"><canvas id="admin-chart-bens"></canvas></div></div></div>`;setTimeout(()=>{runCounters();const catData={};SAMPLE.forEach(a=>{catData[a.category]=(catData[a.category]||0)+1;});const c1=document.getElementById('admin-chart-cat')?.getContext('2d');if(c1)new Chart(c1,{type:'doughnut',data:{labels:Object.keys(catData),datasets:[{data:Object.values(catData),backgroundColor:CHART_COLORS,borderWidth:2,borderColor:'var(--card)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'var(--text)',font:{family:'Tajawal',size:11},padding:8}}}}});const sorted=[...SAMPLE].sort((a,b)=>(b.beneficiaries||0)-(a.beneficiaries||0)).slice(0,5);const c2=document.getElementById('admin-chart-bens')?.getContext('2d');if(c2)new Chart(c2,{type:'bar',data:{labels:sorted.map(a=>a.name.length>12?a.name.slice(0,12)+'…':a.name),datasets:[{data:sorted.map(a=>a.beneficiaries||0),backgroundColor:CHART_COLORS,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--muted)',font:{family:'Tajawal'}},grid:{color:'rgba(128,128,128,.08)'}},y:{ticks:{color:'var(--text)',font:{family:'Tajawal',size:10}},grid:{display:false}}}}});},150);}
+async function renderAdminAssocs(el){let fd=[...SAMPLE];if(S.assocFilter.search){const s=S.assocFilter.search.toLowerCase();fd=fd.filter(a=>a.name.toLowerCase().includes(s)||a.area?.toLowerCase().includes(s));}if(S.assocFilter.status){fd=fd.filter(a=>a.status===S.assocFilter.status);}el.innerHTML=`<div class="tbl-wrap"><div class="tbl-toolbar"><h3>🏛 الجمعيات (${fd.length})</h3><div class="adm-filter-bar"><input class="s-inp" style="width:180px" placeholder="بحث…" value="${S.assocFilter.search}" oninput="S.assocFilter.search=this.value;renderAdminAssocs(document.getElementById('admin-body'))"><select class="f-sel" onchange="S.assocFilter.status=this.value;renderAdminAssocs(document.getElementById('admin-body'))"><option value="">كل الحالات</option><option value="approved"${S.assocFilter.status==='approved'?' selected':''}>✅ معتمدة</option><option value="pending"${S.assocFilter.status==='pending'?' selected':''}>⏳ قيد المراجعة</option><option value="rejected"${S.assocFilter.status==='rejected'?' selected':''}>❌ مرفوضة</option></select><button class="btn btn-gold btn-sm" onclick="SAMPLE.push({id:'n'+Date.now(),name:'جمعية جديدة',category:'عامة',description:'وصف',services:[],phone:'03-0000000',status:'pending',beneficiaries:0});loadAdminTab();toast('تمت إضافة جمعية جديدة','ok')">➕ إضافة جمعية</button></div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>الاسم</th><th>التصنيف</th><th>المنطقة</th><th>الهاتف</th><th>الحالة</th><th>المستفيدون</th><th>الإجراءات</th></tr></thead><tbody>${fd.map(a=>`<tr><td><div style="font-weight:700;font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.name}</div></td><td><span class="bdg ${CAT_COLORS[a.category]||'bdg-gold'}" style="font-size:10px">${CAT_ICONS[a.category]||'🏛'} ${a.category}</span></td><td style="color:var(--muted)">${a.area||'—'}</td><td>${a.phone||'—'}</td><td>${a.status==='approved'?'<span class="bdg bdg-green">✅ معتمدة</span>':a.status==='pending'?'<span class="bdg bdg-orange">⏳ مراجعة</span>':'<span class="bdg bdg-red">❌ مرفوضة</span>'}</td><td style="color:var(--gold);font-weight:700">${(a.beneficiaries||0).toLocaleString('ar')}</td><td><div class="tbl-actions"><button class="btn btn-blue btn-sm" onclick="S.currentId='${a.id}';nav('profile')" title="عرض">👁</button>${a.status==='pending'?`<button class="btn btn-success btn-sm" onclick="a.status='approved';loadAdminTab();toast('تمت الموافقة ✅','ok')">✅</button><button class="btn btn-danger btn-sm" onclick="a.status='rejected';loadAdminTab();toast('تم الرفض ❌','inf')">❌</button>`:''}${a.status==='approved'?`<button class="btn btn-danger btn-sm" onclick="a.status='pending';loadAdminTab();toast('تم التعليق ⏸','inf')" title="تعليق">⏸</button>`:''}</div></td></tr>`).join('')}</tbody></table></div></div>`;}
+async function renderAdminUsers(el){const users=[{id:'admin-001',username:'admin',phone:'0791234567',email:'admin@khayrna.jo',role:'admin',status:'active',is_verified:1,created_at:'2024-01-01'},{id:'user-1',username:'مستخدم',phone:'07xxxxxxxx',role:'user',status:'active',is_verified:0,created_at:'2024-01-15'}];el.innerHTML=`<div class="tbl-wrap"><div class="tbl-toolbar"><h3>👥 المستخدمون (${users.length})</h3></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>اسم المستخدم</th><th>الهاتف</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>التحقق</th><th>تاريخ التسجيل</th></tr></thead><tbody>${users.map(u=>`<tr><td><div style="font-weight:700;font-size:12px">${u.username}</div></td><td style="font-size:11px">${u.phone}</td><td style="font-size:11px;color:var(--muted)">${u.email||'—'}</td><td>${u.role==='admin'?'<span class="bdg bdg-red">👑 مدير</span>':'<span class="bdg bdg-gold">👤 مستخدم</span>'}</td><td>${u.status==='active'?'<span class="bdg bdg-green">نشط</span>':'<span class="bdg bdg-red">موقوف</span>'}</td><td>${u.is_verified?'<span class="bdg bdg-green">✓</span>':'<span class="bdg bdg-orange">غير مفعّل</span>'}</td><td style="font-size:11px;color:var(--muted)">${u.created_at||'—'}</td></tr>`).join('')}</tbody></table></div></div>`;}
+function toggleChat(){S.chatOpen=!S.chatOpen;document.getElementById('chatWin').classList.toggle('open',S.chatOpen);if(S.chatOpen&&!S.chat.length)appendMsg('bot','مرحباً! 👋 أنا **نور**، مساعدك الذكي.\n\nكيف يمكنني مساعدتك في إيجاد الجمعية المناسبة؟');}
+function appendMsg(role,text){const el=document.getElementById('chatMsgs');const div=document.createElement('div');div.className=`msg ${role}`;div.innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');el.appendChild(div);el.scrollTop=el.scrollHeight;return div;}
+function sendChat(){const inp=document.getElementById('chatInp');const msg=inp.value.trim();if(!msg)return;inp.value='';appendMsg('user',msg);S.chat.push({role:'user',content:msg});const ty=appendMsg('bot','…');ty.classList.add('typing');setTimeout(()=>{ty.remove();const reply=offlineReply(msg);appendMsg('bot',reply);S.chat.push({role:'assistant',content:reply});},800);}
+function sendQR(btn){document.getElementById('chatInp').value=btn.textContent.trim();sendChat();}
+function offlineReply(msg){const m=msg.toLowerCase();if(m.includes('غذاء')||m.includes('طعام')){const a=SAMPLE.find(x=>x.services?.some(s=>s.includes('غذائ')));return a?`**${a.name}**\n📍 ${a.area} | 📞 ${a.phone}\n🕐 ${a.working_hours}`:'لم أجد.';}if(m.includes('يتيم')||m.includes('أيتام')){const a=SAMPLE.find(x=>x.category==='رعاية أيتام');return a?`**${a.name}**\n📍 ${a.area} | 📞 ${a.phone}`:'لم أجد.';}if(m.includes('إعاق')||m.includes('احتياجات')){const a=SAMPLE.find(x=>x.category==='ذوو احتياجات خاصة');return a?`**${a.name}**\n📍 ${a.area} | 📞 ${a.phone}`:'لم أجد.';}if(m.includes('تعليم')||m.includes('منحة')){const a=SAMPLE.find(x=>x.category==='تعليم');return a?`**${a.name}**\n📍 ${a.area} | 📞 ${a.phone}`:'لم أجد.';}return `الجمعيات المتاحة في معان:\n${SAMPLE.map(a=>`• **${a.name}** – 📞 ${a.phone}`).join('\n')}\n\nأخبرني ماذا تحتاج وسأرشدك للأنسب.`;}
+function openAdminLogin(){document.getElementById('adminLoginModal').classList.add('open');}
+function closeModal(id){document.getElementById(id)?.classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-ov'))e.target.classList.remove('open');});
+function confirm2(title,body,onConfirm){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmBody').textContent=body;const el=document.getElementById('confirmBtns');el.innerHTML='';[{text:'إلغاء',cls:'btn-outline',fn:()=>closeModal('confirmModal')},{text:'تأكيد',cls:'btn-danger',fn:async()=>{closeModal('confirmModal');await onConfirm();}}].forEach(b=>{const btn=document.createElement('button');btn.className=`btn ${b.cls}`;btn.textContent=b.text;btn.onclick=b.fn;el.appendChild(btn);});document.getElementById('confirmModal').classList.add('open');}
+function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=msg;document.getElementById('toastCt').appendChild(el);setTimeout(()=>el.remove(),3500);}
+window.onload=()=>{S.assocs=[...SAMPLE];};
+
+async function renderImportTab(el) {
+    el.innerHTML = `
+        <div class="tbl-wrap" style="margin-bottom:20px">
+            <div class="tbl-toolbar">
+                <h3>📥 استيراد بيانات من ملف CSV</h3>
+            </div>
+            <div style="padding:24px">
+                <div style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;margin-bottom:20px" id="dropZone">
+                    <div style="font-size:40px;margin-bottom:12px">📄</div>
+                    <div style="font-size:14px;font-weight:700;margin-bottom:5px">اسحب ملف CSV هنا</div>
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">أو</div>
+                    <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVSelect(this)">
+                    <button class="btn btn-gold" onclick="document.getElementById('csvFileInput').click()">📁 اختر ملف CSV</button>
+                    <div style="font-size:11px;color:var(--muted);margin-top:12px">يدعم: .csv (UTF-8)</div>
+                </div>
+                
+                <div style="background:var(--gold-bg);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:16px;margin-bottom:20px">
+                    <div style="font-weight:700;color:var(--gold);margin-bottom:8px">📋 نموذج CSV المطلوب:</div>
+                    <code style="font-size:11px;display:block;background:#000;border-radius:6px;padding:10px;overflow-x:auto">
+الاسم,التصنيف,الهاتف,العنوان,المنطقة,سنة التأسيس,الوصف,الخدمات,أوقات الدوام,البريد الإلكتروني,اسم المسؤول,عدد المستفيدين,خط العرض,خط الطول
+                    </code>
+                </div>
+                
+                <div id="csvPreview" style="display:none">
+                    <div style="font-weight:700;margin-bottom:10px">👁️ معاينة البيانات:</div>
+                    <div id="csvPreviewContent" style="max-height:300px;overflow:auto;background:var(--bg);border-radius:8px;padding:12px;font-size:12px"></div>
+                    <div style="margin-top:16px;display:flex;gap:10px">
+                        <button class="btn btn-gold" onclick="importCSVData()">✅ استيراد البيانات</button>
+                        <button class="btn btn-outline" onclick="cancelCSVImport()">❌ إلغاء</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+                    <div style="font-weight:700;margin-bottom:10px">📤 تصدير البيانات الحالية:</div>
+                    <button class="btn btn-outline" onclick="exportToCSV()">📥 تصدير إلى CSV</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--gold)'; });
+    dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; });
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; handleCSVFile(e.dataTransfer.files[0]); });
+}
+
+let csvData = [];
+
+function handleCSVSelect(input) {
+    if (input.files && input.files[0]) {
+        handleCSVFile(input.files[0]);
+    }
+}
+
+function handleCSVFile(file) {
+    if (!file.name.endsWith('.csv')) {
+        toast('يرجى اختيار ملف CSV فقط', 'err');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            const lines = content.split('\n').filter(l => l.trim());
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const row = {};
+                headers.forEach((h, idx) => row[h] = values[idx]?.trim() || '');
+                if (row['الاسم']) csvData.push(row);
+            }
+            
+            document.getElementById('csvPreview').style.display = 'block';
+            document.getElementById('csvPreviewContent').innerHTML = `
+                <table style="width:100%;border-collapse:collapse">
+                    <thead><tr>${headers.slice(0,6).map(h => `<th style="padding:8px;text-align:right;border-bottom:1px solid var(--border);color:var(--gold)">${h}</th>`).join('')}</tr></thead>
+                    <tbody>
+                        ${csvData.slice(0, 10).map(row => `<tr>${headers.slice(0,6).map(h => `<td style="padding:6px;border-bottom:1px solid var(--border)">${row[h] || '-'}</td>`).join('')}</tr>`).join('')}
+                    </tbody>
+                </table>
+                ${csvData.length > 10 ? `<div style="margin-top:10px;color:var(--muted)">... و ${csvData.length - 10} سجل آخر</div>` : ''}
+            `;
+            
+            toast(`تم قراءة ${csvData.length} سجل`, 'ok');
+        } catch (err) {
+            toast('خطأ في قراءة الملف', 'err');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function importCSVData() {
+    if (!csvData.length) return;
+    
+    const categoryMap = {
+        'عامة': 'عامة', 'رعاية أيتام': 'رعاية أيتام', 'ذوو احتياجات خاصة': 'ذوو احتياجات خاصة',
+        'تنمية المرأة': 'تنمية المرأة', 'إغاثة': 'إغاثة', 'تعليم': 'تعليم',
+        'بيئة': 'بيئة', 'تنمية اقتصادية': 'تنمية اقتصادية', 'تنمية شباب': 'تنمية الشباب',
+        'سياحة وتراث': 'سياحة وتراث'
+    };
+    
+    let imported = 0;
+    csvData.forEach(row => {
+        const name = row['الاسم'];
+        if (!name || SAMPLE.find(s => s.name === name)) return;
+        
+        const category = categoryMap[row['التصنيف']] || 'عامة';
+        const services = row['الخدمات'] ? row['الخدمات'].split('|').map(s => s.trim()).filter(Boolean) : [];
+        
+        SAMPLE.push({
+            id: 'csv-' + Date.now() + '-' + imported,
+            name,
+            category,
+            description: row['الوصف'] || '',
+            services,
+            phone: row['الهاتف'] || '',
+            address: row['العنوان'] || '',
+            area: row['المنطقة'] || '',
+            email: row['البريد الإلكتروني'] || '',
+            contact_name: row['اسم المسؤول'] || '',
+            founded_year: parseInt(row['سنة التأسيس']) || null,
+            beneficiaries: parseInt(row['عدد المستفيدين']) || 0,
+            lat: parseFloat(row['خط العرض']) || null,
+            lng: parseFloat(row['خط الطول']) || null,
+            working_hours: row['أوقات الدوام'] || '',
+            status: 'approved'
+        });
+        imported++;
+    });
+    
+    S.assocs = [...SAMPLE];
+    csvData = [];
+    document.getElementById('csvPreview').style.display = 'none';
+    
+    toast(`تم استيراد ${imported} جمعية بنجاح! 🎉`, 'ok');
+    setTimeout(() => loadAdminTab(), 1500);
+}
+
+function cancelCSVImport() {
+    csvData = [];
+    document.getElementById('csvPreview').style.display = 'none';
+}
+
+function exportToCSV() {
+    const headers = ['الاسم', 'التصنيف', 'الهاتف', 'العنوان', 'المنطقة', 'سنة التأسيس', 'الوصف', 'الخدمات', 'أوقات الدوام', 'البريد الإلكتروني', 'اسم المسؤول', 'عدد المستفيدين', 'خط العرض', 'خط الطول', 'الحالة'];
+    const rows = SAMPLE.map(a => [
+        a.name, a.category, a.phone, a.address || '', a.area || '', a.founded_year || '', 
+        a.description || '', (a.services || []).join('|'), a.working_hours || '', a.email || '',
+        a.contact_name || '', a.beneficiaries || 0, a.lat || '', a.lng || '', a.status || ''
+    ]);
+    
+    const csvContent = [headers, ...rows].map(r => r.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `albaraka-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('تم تصدير البيانات بنجاح! 📥', 'ok');
+}
+
+const API_BASE = 'http://localhost:3001/api';
+let S_VERIFY = { phone: '', method: '', otp: '', expiresAt: 0, countdown: 0 };
+
+async function sendVerificationCode() {
+    const phone = document.getElementById('reg-phone').value.trim();
+    const username = document.getElementById('reg-user').value.trim();
+    
+    if (!username) { toast('أدخل اسم المستخدم', 'err'); return; }
+    if (!phone || phone.length < 9) { toast('أدخل رقم هاتف صحيح', 'err'); return; }
+    
+    S_VERIFY.phone = phone;
+    S_VERIFY.method = 'display';
+    
+    document.getElementById('verifyPhoneDisplay').textContent = phone;
+    document.getElementById('verifyTitle').textContent = 'التحقق من رقم الهاتف';
+    document.getElementById('verifyDesc').textContent = 'اختر طريقة استلام رمز التحقق';
+    
+    document.getElementById('verifyMethodStep').style.display = 'block';
+    document.getElementById('verifyOTPStep').style.display = 'none';
+    document.getElementById('verifyOTPDisplay').style.display = 'none';
+    
+    openModal('verifyModal');
+}
+
+async function selectVerifyMethod(method) {
+    S_VERIFY.method = method;
+    
+    const phoneInput = document.getElementById('reg-phone').value.trim();
+    if (!phoneInput) {
+        toast('أدخل رقم الهاتف أولاً', 'err');
+        return;
+    }
+    
+    S_VERIFY.phone = phoneInput;
+    
+    document.getElementById('verifyPhoneDisplay').textContent = phoneInput;
+    document.getElementById('verifyMethodStep').style.display = 'none';
+    document.getElementById('verifyOTPStep').style.display = 'block';
+    document.getElementById('verify-otp').value = '';
+    
+    if (method === 'display') {
+        const localOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        S_VERIFY.otp = localOTP;
+        
+        document.getElementById('verifyTitle').textContent = '🔐 الرمز التجريبي';
+        document.getElementById('verifyDesc').textContent = 'هذا الرمز للاختبار - منصة البركة';
+        document.getElementById('verifyOTPDisplay').style.display = 'block';
+        document.getElementById('otpDisplayCode').textContent = localOTP;
+        
+        toast(`✅ الرمز: ${localOTP}`, 'ok');
+        startResendTimer();
+    } else {
+        document.getElementById('verifyTitle').textContent = 'جاري الإرسال...';
+        document.getElementById('verifyDesc').textContent = method === 'sms' ? '📱 رسالة SMS من منصة البركة' : '📱 رسالة واتساب';
+        document.getElementById('verifyOTPDisplay').style.display = 'none';
+        
+        try {
+            const res = await fetch(`${API_BASE}/verify/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phoneInput })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                toast(`✅ تم إرسال رمز التحقق`, 'ok');
+                document.getElementById('verifyTitle').textContent = '📱 أدخل رمز التحقق';
+                document.getElementById('verifyDesc').textContent = 'أدخل الرمز المكون من 6 أرقام الذي وصل إلى هاتفك';
+                startResendTimer();
+            } else {
+                toast(data.error || 'فشل إرسال الرمز', 'err');
+                backToMethodSelect();
+            }
+        } catch (e) {
+            console.log('[API Error]', e);
+            toast('خطأ في الاتصال', 'err');
+            backToMethodSelect();
+        }
+    }
+}
+
+async function verifyOTP() {
+    const otp = document.getElementById('verify-otp').value.trim();
+    const phoneInput = document.getElementById('reg-phone').value.trim();
+    
+    if (!otp || otp.length !== 6) {
+        toast('أدخل رمز مكون من 6 أرقام', 'err');
+        return;
+    }
+    
+    if (!phoneInput) {
+        toast('رقم الهاتف غير موجود', 'err');
+        return;
+    }
+    
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.textContent = 'جاري التحقق...';
+    
+    if (S_VERIFY.method === 'display') {
+        if (otp === S_VERIFY.otp) {
+            toast('✅ تم التحقق بنجاح!', 'ok');
+            closeModal('verifyModal');
+            completeRegistration();
+        } else {
+            toast('الرمز غير صحيح', 'err');
+        }
+        btn.disabled = false;
+        btn.textContent = '✅ تحقق';
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE}/verify/check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phoneInput, code: otp })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success && data.verified) {
+            toast('✅ تم التحقق بنجاح!', 'ok');
+            closeModal('verifyModal');
+            completeRegistration();
+        } else {
+            toast(data.error || 'الرمز غير صحيح', 'err');
+        }
+    } catch (e) {
+        console.log('[Verify Error]', e);
+        toast('خطأ في الاتصال', 'err');
+    }
+    
+    btn.disabled = false;
+    btn.textContent = '✅ تحقق';
+}
+
+function completeRegistration() {
+    const username = document.getElementById('reg-user').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    
+    S.currentUser = {
+        id: 'user-' + Date.now(),
+        username,
+        phone,
+        email,
+        role: 'user',
+        is_verified: 1
+    };
+    
+    enterApp();
+    toast(`مرحباً ${username}! 🎉 تم التحقق بنجاح`, 'ok');
+}
+
+function backToMethodSelect() {
+    document.getElementById('verifyMethodStep').style.display = 'block';
+    document.getElementById('verifyOTPStep').style.display = 'none';
+    document.getElementById('verifyTitle').textContent = 'التحقق من رقم الهاتف';
+    document.getElementById('verifyDesc').textContent = 'اختر طريقة استلام رمز التحقق';
+}
+
+let resendInterval;
+function startResendTimer() {
+    S_VERIFY.countdown = 60;
+    const btn = document.getElementById('resendBtn');
+    const timer = document.getElementById('resendTimer');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    
+    if (resendInterval) clearInterval(resendInterval);
+    
+    resendInterval = setInterval(() => {
+        S_VERIFY.countdown--;
+        timer.textContent = `(${S_VERIFY.countdown}s)`;
+        
+        if (S_VERIFY.countdown <= 0) {
+            clearInterval(resendInterval);
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            timer.textContent = '';
+        }
+    }, 1000);
+}
+
+function resendOTP() {
+    if (S_VERIFY.countdown > 0) return;
+    selectVerifyMethod(S_VERIFY.method);
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+</script>
+</body>
+</html>
